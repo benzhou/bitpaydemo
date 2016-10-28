@@ -10,6 +10,6 @@ var transactionSchema = new Schema({
 	createdOn : { type: Date, default: Date.now }
 });
 
-var Transaction = mongoose.model('Thing', transactionSchema);
+var Transaction = mongoose.model('Transaction', transactionSchema);
 
 module.exports = Transaction;

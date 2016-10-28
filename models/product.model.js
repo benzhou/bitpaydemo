@@ -10,6 +10,6 @@ var productSchema = new Schema({
 	createdOn 	: { type: Date, default: Date.now }
 });
 
-var Product = mongoose.model('Thing', productSchema);
+var Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;
