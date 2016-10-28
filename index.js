@@ -78,17 +78,17 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     }
 
     amount = parseFloat(amount) * 1e8;
-    this.addressIndex++;
-    
-    var address = this.hdPrivateKey.derive(this.addressIndex).privateKey.toAddress();
-    this.log.info('New invoice with address:', address);
+    self.addressIndex++;
+
+    var address = self.hdPrivateKey.derive(self.addressIndex).privateKey.toAddress();
+    self.log.info('New invoice with address:', address);
     var hash = address.hashBuffer.toString('hex');
 
     res.render('payment', {
       amount : amount,
       address : address,
       hash    : hash,
-      baseUrl : '/' + this.getRoutePrefix() + '/'
+      baseUrl : '/' + self.getRoutePrefix() + '/'
     });
   });
 
