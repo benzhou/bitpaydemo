@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "bitcore-lib": "^0.13.19",
+    "body-parser": "^1.15.2",
     "bunyan": "^1.8.4",
     "express-handlebars": "^3.0.0"
   }

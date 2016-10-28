@@ -1,0 +1,22 @@
+{
+  "name": "bitpaydemo",
+  "description": "Demo Project",
+  "main": "index.js",
+  "authors": [
+    "Ben Zhou"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "static/js/libs",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bitcore-lib": "^0.13.19"
+  }
+}
