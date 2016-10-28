@@ -25,10 +25,15 @@
   <script language="javascript">
     var bitcore = require('bitcore-lib');
     var socket = io('http://localhost:3001');
+
+    var debug = false;
+
     socket.on('bitcoind/addresstxid', function(data) {
       var address = bitcore.Address(data.address);
+      debug && console.log('data:', data);
       if (address.toString() == '{{address}}') {
         var txidsElm = document.getElementById('txids');
+        console.log('data:', data);
         var elm = document.createTextNode('txid: ' + data.txid);
         txidsElm.appendChild(elm);
       }
