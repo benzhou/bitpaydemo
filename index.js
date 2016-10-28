@@ -34,20 +34,21 @@ util.inherits(BitPayDemoService, EventEmitter);
 BitPayDemoService.dependencies = ['bitcoind'];
 
 BitPayDemoService.prototype.start = function(callback) {
-  this.log.info('BitPayDemoService => start');
+  var self = this;
 
+  this.log.info('BitPayDemoService => start');
   this.log.info('Starting to connect DB.');
 
   mongoose.connect(config.db.connectionString);
 
   var dbConn = mongoose.connection;
-  dbConn.on('error', function() {
-    this.log.fatal('BitPayDemoService => Error when connecting to DB. Connection Error');
+  dbConn.on('error', function(e) {
+    self.log.fatal('BitPayDemoService => Error when connecting to DB. Connection Error: ', e);
     setImmediate(callback);
   });
   dbConn.once('open', function() {
     // we're connected!
-    this.log.info('BitPayDemoService => DB connected successfully.');
+    self.log.info('BitPayDemoService => DB connected successfully.');
     setImmediate(callback);
   });
 };
