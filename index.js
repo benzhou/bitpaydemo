@@ -7,6 +7,9 @@ var bodyParser = require('body-parser');
 var bitcore = require('bitcore-lib');
 
 var logger = require('./logger');
+var config = require('./config');
+
+var mongoose = require('mongoose');
 
 //Catch uncaught exceptions.
 process.on('uncaughtException', function (err) {
@@ -32,12 +35,35 @@ BitPayDemoService.dependencies = ['bitcoind'];
 
 BitPayDemoService.prototype.start = function(callback) {
   this.log.debug('BitPayDemoService => start');
-  setImmediate(callback);
+
+  this.log.info('Starting to connect DB.');
+
+  mongoose.connect(config.DB.connectionString);
+
+  var dbConn = mongoose.connection;
+  dbConn.on('error', function() {
+    this.log.fatal('BitPayDemoService => Error when connecting to DB. Connection Error');
+    setImmediate(callback);
+  });
+  dbConn.once('open', function() {
+    // we're connected!
+    this.log.info('BitPayDemoService => DB connected successfully.');
+    setImmediate(callback);
+  });
 };
 
 BitPayDemoService.prototype.stop = function(callback) {
   this.log.debug('BitPayDemoService => stop');
-  setImmediate(callback);
+
+  var dbConn = mongoose.connection;
+
+  if(dbConn){
+    dbConn.close(function() {
+      callback();
+    });
+  }else{
+    setImmediate(callback);
+  }
 };
 
 BitPayDemoService.prototype.getAPIMethods = function() {
@@ -61,6 +87,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
   
   app.use('/static', express.static(__dirname + '/static'));
   app.use(bodyParser.urlencoded());
+  
   /*
   Setup Routes
   */
