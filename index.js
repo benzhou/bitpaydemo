@@ -24,8 +24,20 @@ var BitPayDemoService = function(options) {
   this.name = options.name;
   this.log = this.node.log;
 
+  /*
   this.hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
   this.log.info('Using key:', this.hdPrivateKey);
+  */
+ 
+  var hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
+  this.hdPublicKey = hdPrivateKey.hdPublicKey;
+  try {
+    new bitcore.HDPublicKey();
+  } catch(e) {
+    console.log("Can't generate a public key without a private key");
+  }
+
+
   this.addressIndex = 0;
 };
 
@@ -59,7 +71,9 @@ BitPayDemoService.prototype.stop = function(callback) {
   var dbConn = mongoose.connection;
 
   if(dbConn){
+    this.log.info('BitPayDemoService => stop => Shutting down db connection.');
     dbConn.close(function() {
+      this.log.info('BitPayDemoService => stop => DB connection stopped.');
       callback();
     });
   }else{
@@ -108,7 +122,8 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     amount = parseFloat(amount) * 1e8;
     self.addressIndex++;
 
-    var address = self.hdPrivateKey.derive(self.addressIndex).privateKey.toAddress();
+    //var address = self.hdPrivateKey.derive(self.addressIndex).privateKey.toAddress();
+    var address = new bitcore.Address(self.hdPublicKey.derive(self.addressIndex).publicKey, self.node.network);
     self.log.info('New invoice with address:', address);
     var hash = address.hashBuffer.toString('hex');
 
