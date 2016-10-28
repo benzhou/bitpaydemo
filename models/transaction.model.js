@@ -1,3 +1,5 @@
+'use strict';
+
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
@@ -10,4 +12,4 @@ var transactionSchema = new Schema({
 
 var Transaction = mongoose.model('Thing', transactionSchema);
 
-module.export = Transaction;
+module.exports = Transaction;

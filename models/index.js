@@ -1,2 +1,4 @@
-module.export.Product = require('./product.model');
-module.export.Transaction = require('./transaction.model');
+'use strict';
+
+module.exports.Product = require('./product.model');
+module.exports.Transaction = require('./transaction.model');
