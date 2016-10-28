@@ -7,4 +7,3 @@ node_modules
 *.dpkg-dist
 bower_components/
 mongodump.stamp
-static/js/libs/
