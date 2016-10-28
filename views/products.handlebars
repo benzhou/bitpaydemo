@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Demo Bitpay Service - Products List</title>
+</head>
+
+<body>
+  <h1>Welcome!</h1>
+  <h2>Please choose your product:</h2>
+
+  <ul>
+  	{{#each products}}
+        <li class="row">
+        	{{this.name}} - {{this.price}}
+        </li>
+    {{/each}}
+  </ul>
+</body>
+
+</html>
