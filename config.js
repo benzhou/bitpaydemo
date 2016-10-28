@@ -5,7 +5,7 @@ var config = {
     LEVEL : "debug"
   },
   db : {
-      connectionString :  "mongodb://" + (process.env.MONGODB_ADDR || "mongodb") + ":27017/bitpaydemo",
+      connectionString :  "mongodb://" + (process.env.MONGODB_ADDR || "localhost") + ":27017/bitpaydemo",
       poolSize :          10
   }
 };
