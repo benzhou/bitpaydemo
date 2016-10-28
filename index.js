@@ -43,7 +43,7 @@ BitPayDemoService.prototype.start = function(callback) {
 
   var dbConn = mongoose.connection;
   dbConn.on('error', function(e) {
-    self.log.fatal('BitPayDemoService => Error when connecting to DB. Connection Error: ', e);
+    self.log.info('BitPayDemoService => Error when connecting to DB. Connection Error: ', e);
     setImmediate(callback);
   });
   dbConn.once('open', function() {
