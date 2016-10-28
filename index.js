@@ -10,6 +10,7 @@ var logger = require('./logger');
 var config = require('./config');
 
 var mongoose = require('mongoose');
+var models = require('./models');
 
 //Catch uncaught exceptions.
 process.on('uncaughtException', function (err) {
@@ -31,13 +32,6 @@ var BitPayDemoService = function(options) {
  
   var hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
   this.hdPublicKey = hdPrivateKey.hdPublicKey;
-  try {
-    new bitcore.HDPublicKey();
-  } catch(e) {
-    console.log("Can't generate a public key without a private key");
-  }
-
-
   this.addressIndex = 0;
 };
 
@@ -110,6 +104,21 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
   app.get('/', function(req, res) {
     res.render('index', {});
   });
+
+  app.get('/products', function(req, res, next) {
+
+    models.Product.find({}, function(err, products) {
+      if(err){
+        self.log.info('GET /products Error: ', err);
+        return next(err);
+      }
+
+      res.render('products', {
+        products : products
+      });
+    });
+  });
+
 
   app.post('/gopay', function(req, res, next) {
     var amount = req.body.amount;
