@@ -17,6 +17,9 @@
     "tests"
   ],
   "dependencies": {
-    "bitcore-lib": "^0.13.19"
+    "bitcore-lib": "^0.13.19",
+    "jquery": "^3.1.1",
+    "jquery-qrcode": "*",
+    "socket.io": "^1.5.1"
   }
 }
