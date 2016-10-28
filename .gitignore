@@ -1,0 +1,9 @@
+.idea/
+.vagrant
+.sass-cache
+.DS_store
+node_modules
+*.log
+*.dpkg-dist
+bower_components/
+mongodump.stamp
