@@ -85,7 +85,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     var hash = address.hashBuffer.toString('hex');
 
     res.render('payment', {
-      amount : amount,
+      amount : amount / 1e8,
       address : address,
       hash    : hash,
       baseUrl : '/' + self.getRoutePrefix() + '/'
