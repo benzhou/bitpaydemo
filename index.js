@@ -34,11 +34,11 @@ util.inherits(BitPayDemoService, EventEmitter);
 BitPayDemoService.dependencies = ['bitcoind'];
 
 BitPayDemoService.prototype.start = function(callback) {
-  this.log.debug('BitPayDemoService => start');
+  this.log.info('BitPayDemoService => start');
 
   this.log.info('Starting to connect DB.');
 
-  mongoose.connect(config.DB.connectionString);
+  mongoose.connect(config.db.connectionString);
 
   var dbConn = mongoose.connection;
   dbConn.on('error', function() {
@@ -53,7 +53,7 @@ BitPayDemoService.prototype.start = function(callback) {
 };
 
 BitPayDemoService.prototype.stop = function(callback) {
-  this.log.debug('BitPayDemoService => stop');
+  this.log.info('BitPayDemoService => stop');
 
   var dbConn = mongoose.connection;
 
@@ -67,17 +67,17 @@ BitPayDemoService.prototype.stop = function(callback) {
 };
 
 BitPayDemoService.prototype.getAPIMethods = function() {
-  this.log.debug('BitPayDemoService => getAPIMethods');
+  this.log.info('BitPayDemoService => getAPIMethods');
   return [];
 };
 
 BitPayDemoService.prototype.getPublishEvents = function() {
-  this.log.debug('BitPayDemoService => getPublishEvents');
+  this.log.info('BitPayDemoService => getPublishEvents');
   return [];
 };
 
 BitPayDemoService.prototype.setupRoutes = function(app, express) {
-  this.log.debug('BitPayDemoService => setupRoutes');
+  this.log.info('BitPayDemoService => setupRoutes');
   var self = this;
 
   //Setup express-handlebar
@@ -125,7 +125,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 };
 
 BitPayDemoService.prototype.getRoutePrefix = function() {
-  this.log.debug('BitPayDemoService => getRoutePrefix');
+  this.log.info('BitPayDemoService => getRoutePrefix');
   return 'demoservice';
 };
 
