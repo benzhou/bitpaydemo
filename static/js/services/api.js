@@ -6,8 +6,8 @@
 	bitpaydemo.factory('productsServices', [
             '$resource',
             'bitpayDemoConfig',
-        function($resource, tenacityConfig){
-            var apiConfig = tenacityConfig.API;
+        function($resource, bitpayDemoConfig){
+            var apiConfig = bitpayDemoConfig.API;
             return $resource(
                 [apiConfig.URL, "/account"].join(''), //endpoint
                 {},

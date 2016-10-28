@@ -103,7 +103,9 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
   */
   
   app.get('/', function(req, res) {
-    res.render('index', {});
+    res.render('index', {
+      baseUrl : '/' + self.getRoutePrefix() + '/'
+    });
   });
 
   app.get('/products', function(req, res, next) {
@@ -118,6 +120,10 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
         products : products
       });
     });
+  });
+
+  app.post('/products',function(req, res, next) {
+    
   });
 
 
