@@ -4,7 +4,7 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var exphbs = require('express-handlebars');
 var bodyParser = require('body-parser');
-//var bitcore = require('bitcore-lib');
+var bitcore = require('bitcore-lib');
 
 var logger = require('./logger');
 
@@ -21,8 +21,8 @@ var BitPayDemoService = function(options) {
   this.name = options.name;
   this.log = this.node.log;
 
-  //this.hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
-  //this.log.info('Using key:', this.hdPrivateKey);
+  this.hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
+  this.log.info('Using key:', this.hdPrivateKey);
   this.addressIndex = 0;
 };
 
