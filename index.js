@@ -60,14 +60,15 @@ BitPayDemoService.prototype.start = function(callback) {
 };
 
 BitPayDemoService.prototype.stop = function(callback) {
-  this.log.info('BitPayDemoService => stop');
+  var self = this;
+  self.log.info('BitPayDemoService => stop');
 
   var dbConn = mongoose.connection;
 
   if(dbConn){
-    this.log.info('BitPayDemoService => stop => Shutting down db connection.');
+    self.log.info('BitPayDemoService => stop => Shutting down db connection.');
     dbConn.close(function() {
-      this.log.info('BitPayDemoService => stop => DB connection stopped.');
+      self.log.info('BitPayDemoService => stop => DB connection stopped.');
       callback();
     });
   }else{
