@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var transactionSchema = new Schema({
-	productId   : { type :  mongoose.Types.ObjectId, required : true},
+	productId   : { type :  Schema.Types.ObjectId, required : true},
 	toAddress   : { type: String, required : true},
 	fromAddress : String,
 	amount  : { type: Number, required : true},

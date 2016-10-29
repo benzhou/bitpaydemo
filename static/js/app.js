@@ -37,6 +37,11 @@
                 templateUrl: "static/partials/buy.html",
                 controller: "buyCtrl",
                 data : { requireLogin : false},
+            }).state("root.trans", {
+                url : "^/transactions",
+                templateUrl: "static/partials/transactions.html",
+                controller: "transactionsCtrl",
+                data : { requireLogin : false},
             }).state("otherwise", {
                 url : "/notfound",
                 templateUrl: "static/partials/404.html",

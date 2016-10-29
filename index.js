@@ -27,6 +27,8 @@ var BitPayDemoService = function(options) {
   this.log = this.node.log;
   this.bus = null;
 
+  this.listeningAddresses = {};
+
   /*
   this.hdPrivateKey = new bitcore.HDPrivateKey(this.node.network);
   this.log.info('Using key:', this.hdPrivateKey);
@@ -61,9 +63,19 @@ BitPayDemoService.prototype.start = function(callback) {
     try{
       self.bus = self.node.openBus();
 
-      self.bus.on('tx', function(message) {
-        self.log.info('BitPayDemoService => received tx event:', message);
+      self.bus.on('bitcoind/rawtransaction', function(message) {
+        self.log.info('BitPayDemoService => received bitcoind/rawtransaction event:', message);
       });
+
+      self.node.services.bitcoind.on('tx', self.transactionHandler.bind(self));
+      self.bus.on('bitcoind/addresstxid', function(data) {
+        self.log.info('BitPayDemoService => received bitcoind/addresstxid event: address: ', data.address);
+
+        if(self.listeningAddresses.hasOwnProperty(data.address)){
+          self.log.info('========>  Found ! BitPayDemoService => received bitcoind/addresstxid event'); 
+        }
+      });
+
     }catch(e){
       self.log.info('BitPayDemoService => Error when start event bus:', e);
       self.log.info('BitPayDemoService => Cleaning.');
@@ -149,7 +161,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 
     models.Product.find({}, function(err, products) {
       if(err){
-        self.log.info('GET /products Error: ', err);
+        self.log.info('GET /api/products Error: ', err);
         return next(err);
       }
 
@@ -173,6 +185,19 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 
       res.json({
         sucess : true
+      });
+    });
+  });
+
+  app.get('/api/transactions', function(req, res, next) {
+    models.Transaction.find().limit(10).sort({createdOn : -1}).exec(function(err, transactions) {
+      if(err){
+        self.log.info('GET /api/transactions Error: ', err);
+        return next(err);
+      }
+
+      res.json({
+        transactions : transactions
       });
     });
   });
@@ -223,13 +248,22 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
         open   : true
       });
 
-      transaction.save(err, function() {
+      transaction.save(function(err, t) {
         if(err){
           return next({
             httpStatusCode : 500,
             message : 'Not able to initiate this request.'
           });
         }
+
+        self.log.info('POST /api/gopay => t: ', t);
+        //Adding the address to the listening collection so later we can find it when we receive a tx event.
+        self.listeningAddresses[addrObj.address] = {
+          transactionId : t._id,
+          productId : new ObjectId(productId),
+          toAddress : addrObj.address,
+          amount : product.price
+        };
 
         res.json({
           amount : product.price,
@@ -239,26 +273,6 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       });
     });
   });
-
-  app.post('/gopay', function(req, res, next) {
-    var amount = req.body.amount;
-    
-    //if amount is null or 0, or not a valid floating number, we don't continue process
-    if(!amount || !/^[+-]?\d+(\.\d+)?$/gi.test(amount)){
-      return res.status(400).render('payment-invalid');
-    }
-
-    amount = parseFloat(amount) * 1e8;
-    var addrObj = getPaymentAddress(amount);
-
-    res.render('payment', {
-      amount : amount / 1e8,
-      address : addrObj.address,
-      hash    : addrObj.hash,
-      baseUrl : '/' + self.getRoutePrefix() + '/'
-    });
-  });
-
 
   //Catch all unmatched routes. 404
   app.use(function(req, res) {
@@ -277,6 +291,55 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 BitPayDemoService.prototype.getRoutePrefix = function() {
   this.log.info('BitPayDemoService => getRoutePrefix');
   return 'demoservice';
+};
+
+/*
+ * transactionHandler: this is the delegate when a transaction is received by your node
+ */
+BitPayDemoService.prototype.transactionHandler = function(txBuffer) {
+  var self = this;
+  var tx = bitcore.Transaction().fromBuffer(txBuffer);
+
+  //this.log.info('BitPayDemoService => transactionHandler => received tx event. listening:', self.listeningAddresses);
+
+  for (var i = 0; i < tx.outputs.length; i++) {
+    self.transactionOutputHandler(tx.outputs[i], tx.inputs);
+  }
+
+};
+
+/*
+ * transactionInputHandler: helper for transactionHandler
+ */
+BitPayDemoService.prototype.transactionOutputHandler = function(output, inputs) {
+  var self = this;
+
+  if (!output.script) {
+    return;
+  }
+  var address = output.script.toAddress(self.node.network);
+
+  if(!address){ return;}
+  var addr = address.toString();
+  //this.log.info('BitPayDemoService => transactionInputHandler => address:', addr);
+  if (addr && this.listeningAddresses.hasOwnProperty(addr)) {
+    self.log.info('=========> BitPayDemoService => transactionInputHandler => found transaction for address:', addr);
+
+    models.Transaction.update({
+      _id : self.listeningAddresses[addr].transactionId
+    }, {'$set': {
+      open : false,
+      closedOn : new Date()
+    }}, function(err) {
+      //Need to figure out what if at this point, we got an error to update our DB.
+      //Retry? transaction happened, so we don't want to listen it anymore.
+      delete self.listeningAddresses[addr];
+
+      if(err){
+        self.log.info('=========> BitPayDemoService => transactionInputHandler => err update DB for to address:', addr);
+      }
+    });    
+  }
 };
 
 

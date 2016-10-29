@@ -17,5 +17,12 @@
             var apiConfig = bitpayDemoConfig.API;
             return $resource([apiConfig.URL, "/gopay"].join('')); //endpoint);
         }
+    ]).factory('transactionsServices', [
+            '$resource',
+            'bitpayDemoConfig',
+        function($resource, bitpayDemoConfig){
+            var apiConfig = bitpayDemoConfig.API;
+            return $resource([apiConfig.URL, "/transactions"].join('')); //endpoint);
+        }
     ]);
 })();
