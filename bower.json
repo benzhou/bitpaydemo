@@ -28,6 +28,7 @@
     "angular-resource": "^1.5.8",
     "angular-animate": "^1.5.8",
     "ngstorage": "^0.3.11",
-    "angular-qrcode": "monospaced/angular-qrcode#^6.2.1"
+    "angular-qrcode": "monospaced/angular-qrcode#^6.2.1",
+    "angular-socket-io": "^0.7.0"
   }
 }

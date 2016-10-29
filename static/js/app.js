@@ -8,6 +8,7 @@
         "ui.bootstrap",
         "bitpayDemo.config",
         'monospaced.qrcode',
+        'btford.socket-io',
     ]).constant('AUTH_EVENTS', {
       loginSuccess: 'auth-login-success',
       logoutSuccess: 'auth-logout-success'
@@ -41,6 +42,11 @@
                 url : "^/transactions",
                 templateUrl: "static/partials/transactions.html",
                 controller: "transactionsCtrl",
+                data : { requireLogin : false},
+            }).state("root.payment-success", {
+                url : "^/success",
+                templateUrl: "static/partials/paymentSuccess.html",
+                controller: "paymentSuccessCtrl",
                 data : { requireLogin : false},
             }).state("otherwise", {
                 url : "/notfound",

@@ -12,7 +12,8 @@
   <style>
     body { padding-top: 70px; }
   </style>
-
+  
+  <script src="/socket.io/socket.io.js"></script>
   <script src="static/js/libs/angular/angular.js"></script>
   <script src="static/js/libs/angular-animate/angular-animate.js"></script>
   <script src="static/js/libs/angular-ui-router/release/angular-ui-router.min.js"></script>
@@ -22,6 +23,7 @@
   <script src="static/js/libs/qrcode-generator/js/qrcode.js"></script>
   <script src="static/js/libs/qrcode-generator/js/qrcode_UTF8.js"></script>
   <script src="static/js/libs/angular-qrcode/angular-qrcode.js"></script>
+  <script src="static/js/libs/angular-socket-io/socket.js"></script>
 
   <script src="static/js/config.js"></script>
   <script type="application/javascript">
@@ -36,11 +38,13 @@
   <script src="static/js/app.js"></script>
   <script src="static/js/services/api.js"></script>
   <script src="static/js/services/session.js"></script>
+  <script src="static/js/services/socket.js"></script>
   <script src="static/js/directives/nav.js"></script>
   <script src="static/js/controllers/indexCtrl.js"></script>
   <script src="static/js/controllers/productAddCtrl.js"></script>
   <script src="static/js/controllers/buyCtrl.js"></script>
   <script src="static/js/controllers/transactionsCtrl.js"></script>
+  <script src="static/js/controllers/paymentSuccessCtrl.js"></script>
 </head>
 <body role="document">
     <div ui-view class="view-frame"></div>
