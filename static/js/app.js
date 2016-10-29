@@ -7,38 +7,46 @@
         'ngStorage',
         "ui.bootstrap",
         "bitpayDemo.config",
+        'monospaced.qrcode',
     ]).constant('AUTH_EVENTS', {
       loginSuccess: 'auth-login-success',
       logoutSuccess: 'auth-logout-success'
     }).config(["$urlRouterProvider","$stateProvider", "$locationProvider",
         function($urlRouterProvider, $stateProvider, $locationProvider) {
-            $locationProvider.html5Mode(true);
-            $urlRouterProvider.when("","/test").when("/","/test").otherwise("/notfound");
-
+            //$locationProvider.html5Mode(true);
+            
             $stateProvider.state("root", {
                 url : "",
                 abstract: true,
-                templateUrl: "/partials/root.html",
+                templateUrl: "static/partials/root.html",
                 onEnter: function(){
                   //console.log("enter root");
                 }
             }).state("root.index", {
                 url : "^/index",
-                templateUrl: "/partials/index.html",
+                templateUrl: "static/partials/index.html",
                 controller: "indexCtrl",
-                data : { requireLogin : true},
-                onEnter: function(){
-                  //console.log("enter root.index");
-                }
+                data : { requireLogin : false},
+            }).state("root.productsAdd", {
+                url : "^/products/add",
+                templateUrl: "static/partials/productAdd.html",
+                controller: "productAddCtrl",
+                data : { requireLogin : false},
+            }).state("root.buy", {
+                url : "^/buy/:id",
+                templateUrl: "static/partials/buy.html",
+                controller: "buyCtrl",
+                data : { requireLogin : false},
             }).state("otherwise", {
                 url : "/notfound",
-                templateUrl: "/partials/404.html",
-                data : { requireLogin : false},
+                templateUrl: "static/partials/404.html",
                 onEnter: function(){
                   //console.log("enter not found");
                 }
             });
-    
+
+            $urlRouterProvider.when("", "/index").otherwise("/notfound");
+  
         }]).config(function ($httpProvider) {
         
           $httpProvider.interceptors.push(function ($timeout, $q, $injector) {
@@ -53,14 +61,14 @@
             });
 
             return {
-              responseError: function (rejection) {
+              /*responseError: function (rejection) {
                 if (rejection.status !== 401) {
                   return rejection;
                 }
 
                 var deferred = $q.defer();
 
-                /*
+                
                 loginModal()
                   .then(function () {
                     deferred.resolve( $http(rejection.config) );
@@ -69,12 +77,12 @@
                     $state.go('root.index');
                     deferred.reject(rejection);
                   });
-                */
+                
                 $state.go('root.login');
                 deferred.reject(rejection);
 
                 return deferred.promise;
-              }
+              }*/
             };
           });
         

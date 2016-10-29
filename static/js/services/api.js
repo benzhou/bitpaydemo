@@ -8,15 +8,14 @@
             'bitpayDemoConfig',
         function($resource, bitpayDemoConfig){
             var apiConfig = bitpayDemoConfig.API;
-            return $resource(
-                [apiConfig.URL, "/account"].join(''), //endpoint
-                {},
-                {
-                    login      : { method: "POST", url : [apiConfig.URL, "/authenticate"].join("")}
-                    //adminLogout     : { method: "GET", url : [apiConfig.URL, "/auth/adminToken/invalidate"].join('')},
-                    //adminAuthToken  : { method: "GET", url : [apiConfig.URL, "/auth/adminToken"].join('')}
-                }
-            );
+            return $resource([apiConfig.URL, "/products"].join('')); //endpoint);
+        }
+    ]).factory('buyServices', [
+            '$resource',
+            'bitpayDemoConfig',
+        function($resource, bitpayDemoConfig){
+            var apiConfig = bitpayDemoConfig.API;
+            return $resource([apiConfig.URL, "/gopay"].join('')); //endpoint);
         }
     ]);
 })();

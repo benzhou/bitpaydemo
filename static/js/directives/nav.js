@@ -33,7 +33,7 @@
                  $state.go('root.index');
                };
             },
-            templateUrl : '/partials/nav.html'
+            templateUrl : 'static/partials/nav.html'
         };
     });
 }());

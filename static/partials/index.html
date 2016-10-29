@@ -1,3 +1,5 @@
 <div class="list-group">
-  <a ng-repeat="company in companies" class="list-group-item active">{{company.name}}</a>
+  <div ng-repeat="product in products" class="list-group-item">
+  	{{product.name}} -- {{product.price}} <a ng-click="buy(product)">Buy</a>
+  </div>
 </div>

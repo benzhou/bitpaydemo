@@ -27,6 +27,7 @@
     "angular-bootstrap": "^2.2.0",
     "angular-resource": "^1.5.8",
     "angular-animate": "^1.5.8",
-    "ngstorage": "^0.3.11"
+    "ngstorage": "^0.3.11",
+    "angular-qrcode": "monospaced/angular-qrcode#^6.2.1"
   }
 }
