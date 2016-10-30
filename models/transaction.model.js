@@ -19,6 +19,10 @@ var transactionSchema = new Schema({
 	createdOn : { type: Date, default: Date.now }
 });
 
+transactionSchema.statics.findByProductId = function(productId, cb) {
+	return this.find({productId : productId}, cb);	
+};
+
 var Transaction = mongoose.model('Transaction', transactionSchema);
 
 module.exports = Transaction;

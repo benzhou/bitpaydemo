@@ -60,37 +60,7 @@ BitPayDemoService.prototype.start = function(callback) {
     // we're connected!
     self.log.info('BitPayDemoService => DB connected successfully.');
 
-    try{
-      self.bus = self.node.openBus();
-
-      self.bus.on('bitcoind/rawtransaction', function(message) {
-        self.log.info('BitPayDemoService => received bitcoind/rawtransaction event:', message);
-      });
-
-      self.node.services.bitcoind.on('tx', self.transactionHandler.bind(self));
-      self.bus.on('bitcoind/addresstxid', function(data) {
-        self.log.info('BitPayDemoService => received bitcoind/addresstxid event: address: ', data.address);
-
-        if(self.listeningAddresses.hasOwnProperty(data.address)){
-          self.log.info('========>  Found ! BitPayDemoService => received bitcoind/addresstxid event'); 
-        }
-      });
-
-    }catch(e){
-      self.log.info('BitPayDemoService => Error when start event bus:', e);
-      self.log.info('BitPayDemoService => Cleaning.');
-      if(self.bus){
-        self.bus.close();
-      }
-
-      //Closing DB connecting.
-      dbConn.close(function() {
-        self.log.info('BitPayDemoService => Cleaned.');
-        
-        //re-throw to cause the node to shut down.
-        throw e;
-      });
-    }
+    self.node.services.bitcoind.on('tx', self.transactionHandler.bind(self));
 
     setImmediate(callback);
   });
@@ -166,6 +136,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       }
 
       res.json({
+        sucess : true,
         products : products
       });
     });
@@ -197,6 +168,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       }
 
       res.json({
+        sucess : true,
         transactions : transactions
       });
     });
@@ -210,6 +182,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       }
 
       res.json({
+        sucess : true,
         transaction : t
       });
     });
@@ -224,6 +197,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       var hash = address.hashBuffer.toString('hex');
 
       return {
+        sucess : true,
         address: address.toString(),
         hash  : hash
       };
@@ -234,6 +208,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     
     if(!req.body || !req.body.productId){
       return next({
+        sucess : false,
         httpStatusCode : 400,
         message : 'Product Id is required.'
       });
@@ -247,6 +222,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 
       if(!product){
         return next({
+          sucess : false,
           httpStatusCode : 400,
           message : "invalid product"
         });
@@ -264,6 +240,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       transaction.save(function(err, t) {
         if(err){
           return next({
+            sucess : false,
             httpStatusCode : 500,
             message : 'Not able to initiate this request.'
           });
@@ -279,6 +256,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
         };
 
         res.json({
+          sucess : true,
           tranId : t._id,
           amount : product.price,
           address : addrObj.address,
@@ -346,7 +324,7 @@ BitPayDemoService.prototype.transactionOutputHandler = function(output, tx) {
     var paid = bitcore.Unit.fromSatoshis(output.satoshis).bits;
     var tranId = self.listeningAddresses[addr].transactionId;
 
-    models.Transaction.findOne({_id : tranId}, function(err, tran) {
+    models.Transaction.findById(tranId, function(err, tran) {
       if(err){
         self.log.info('BitPayDemoService => transactionInputHandler => err occurred when look up transaction %s, err: %s', tranId, err);
         return;
