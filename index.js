@@ -52,14 +52,18 @@ BitPayDemoService.prototype.start = function(callback) {
   mongoose.connect(config.db.connectionString);
 
   var dbConn = mongoose.connection;
+
   dbConn.on('error', function(e) {
     self.log.info('BitPayDemoService => Error when connecting to DB. Connection Error: ', e);
-    setImmediate(callback);
+    //db connection error should interrupt the service. throw exception
+    throw e;
   });
+
   dbConn.once('open', function() {
     // we're connected!
     self.log.info('BitPayDemoService => DB connected successfully.');
 
+    //Start to listen to the 'tx' event so we can process once someone made a payment.
     self.node.services.bitcoind.on('tx', self.transactionHandler.bind(self));
 
     setImmediate(callback);
@@ -74,6 +78,8 @@ BitPayDemoService.prototype.stop = function(callback) {
 
   if(dbConn){
     self.log.info('BitPayDemoService => stop => Shutting down db connection.');
+
+    //Clean DB connection once service stopping.
     dbConn.close(function() {
       self.log.info('BitPayDemoService => stop => DB connection stopped.');
 
@@ -82,7 +88,7 @@ BitPayDemoService.prototype.stop = function(callback) {
         self.bus.close();
         self.log.info('BitPayDemoService => stop => event bus closed.');
       }
-      callback();
+      setImmediate(callback);
     });
   }else{
     if(self.bus){
@@ -188,10 +194,11 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     });
   });
 
-  //util function to follow DRY principle.
+  /**
+   * function used to generate pay-to address.
+   */
   var getPaymentAddress = function() {
       self.addressIndex++;
-      //var address = self.hdPrivateKey.derive(self.addressIndex).privateKey.toAddress();
       var address = new bitcore.Address(self.hdPublicKey.derive(self.addressIndex).publicKey, self.node.network);
       self.log.info('New invoice with address:', address.toString());
       var hash = address.hashBuffer.toString('hex');
@@ -215,7 +222,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
     }
 
     //Lookup the product is being purchased.
-    models.Product.findOne({_id: new ObjectId(productId)}, function(err, product) {
+    models.Product.findById(new ObjectId(productId), function(err, product) {
       if(err){
         return next(err);
       }
@@ -230,6 +237,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
 
       var addrObj = getPaymentAddress();
 
+      //Create Store Transaction records for this payment.
       var transaction = new models.Transaction({
         productId : new ObjectId(productId),
         toAddress : addrObj.address,
@@ -247,7 +255,10 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
         }
 
         self.log.info('POST /api/gopay => t: ', t);
+
         //Adding the address to the listening collection so later we can find it when we receive a tx event.
+        //In a real app, I would likly to move this to a seprate service by publishing this address and related 
+        //metadata to persistant storation, e.g. a DB. 
         self.listeningAddresses[addrObj.address] = {
           transactionId : t._id,
           productId : new ObjectId(productId),
@@ -335,18 +346,18 @@ BitPayDemoService.prototype.transactionOutputHandler = function(output, tx) {
         return;
       }
 
+      //If a Store Transaction has been previously closed, we don't need to process here anymore.
       if(!tran.open){
         self.log.info('BitPayDemoService => transactionInputHandler => transaction has been closed.', tranId);
         return;
       }
-
-      //Once amount previously paid plus this time paid is greater equal than what was needed be to paid, we can close this store transaction.
       var amountBits = bitcore.Unit.fromBTC(tran.amount).bits;
       var amountPaidBits = bitcore.Unit.fromBTC(tran.amountPaid).bits;
-
       amountPaidBits = amountPaidBits + paid;
 
       self.log.info('BitPayDemoService => transactionInputHandler => amountPaidBits %s and amountBits %s.', amountPaidBits, amountBits);
+
+      //Once amount previously paid plus this time paid is greater equal than what was needed be to paid, we can close this store transaction.
       var shouldCloseTheTransaction = (amountPaidBits >= amountBits);
       if(shouldCloseTheTransaction){
         self.log.info('BitPayDemoService => transactionInputHandler => amount needed is paid, closing the store transaction.');
@@ -354,6 +365,7 @@ BitPayDemoService.prototype.transactionOutputHandler = function(output, tx) {
         tran.closedOn = new Date();
       }
 
+      //Covert amount paid back to BTC for storage.
       tran.amountPaid = bitcore.Unit.fromBits(amountPaidBits).BTC;
 
       tran.save(function(err) {
