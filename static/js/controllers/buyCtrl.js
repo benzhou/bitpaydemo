@@ -12,8 +12,9 @@
 		'sessionService',
 		'buyServices',
 		'bitPaySocket',
+		'transactionsServices',
 		function($scope, $rootScope, $log, $state, $stateParams,
-			sessionService, buyServices, bitPaySocket){
+			sessionService, buyServices, bitPaySocket, transactionsServices){
 			
 			$scope.v = 5;
 			$scope.e = 'M';
@@ -39,7 +40,18 @@
 				bitPaySocket.forward('bitcoind/addresstxid', $scope);
 			    $scope.$on('socket:bitcoind/addresstxid', function (ev, data) {
 			      $log.log('socket:bitcoind/addresstxid event received.', data);
-			      $state.go('root.payment-success');
+			      transactionsServices.get({
+			      	id : result.tranId
+			      }).$promise.then(function(tranResult) {
+			      	$log.log('lookup for transaction data: .', tranResult);
+
+			      	if(tranResult.transaction && !tranResult.transaction.open){
+			      		$state.go('root.payment-success');
+			      	}else{
+			      		$scope.storeTransaction = tranResult.transaction;
+			      		$scope.amount = tranResult.transaction.amount - tranResult.transaction.amountPaid;
+			      	}
+			      });
 			    });
 				
 			}).catch(function(e){

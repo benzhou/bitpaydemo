@@ -1,2 +1,3 @@
 <qrcode version="{{v}}" error-correction-level="{{e}}" size="{{s}}" data="{{qrData}}"></qrcode>
 <p>Please pay {{amount}} to address {{address}}</p>
+<p ng-if="storeTransaction.amountPaid">Received your payment of {{storeTransaction.amountPaid}}</p>

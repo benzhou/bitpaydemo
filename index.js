@@ -201,6 +201,19 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
       });
     });
   });
+           
+  app.get('/api/transactions/:id([0-9a-fA-F]{24})', function(req, res, next) {
+    models.Transaction.findOne({_id : req.params.id},function(err, t) {
+      if(err){
+        self.log.info('GET /api/transactions/:id Error: ', err);
+        return next(err);
+      }
+
+      res.json({
+        transaction : t
+      });
+    });
+  });
 
   //util function to follow DRY principle.
   var getPaymentAddress = function() {
@@ -266,6 +279,7 @@ BitPayDemoService.prototype.setupRoutes = function(app, express) {
         };
 
         res.json({
+          tranId : t._id,
           amount : product.price,
           address : addrObj.address,
           hash    : addrObj.hash
@@ -303,7 +317,7 @@ BitPayDemoService.prototype.transactionHandler = function(txBuffer) {
   //this.log.info('BitPayDemoService => transactionHandler => received tx event. listening:', self.listeningAddresses);
 
   for (var i = 0; i < tx.outputs.length; i++) {
-    self.transactionOutputHandler(tx.outputs[i], tx.inputs);
+    self.transactionOutputHandler(tx.outputs[i], tx);
   }
 
 };
@@ -311,7 +325,7 @@ BitPayDemoService.prototype.transactionHandler = function(txBuffer) {
 /*
  * transactionInputHandler: helper for transactionHandler
  */
-BitPayDemoService.prototype.transactionOutputHandler = function(output, inputs) {
+BitPayDemoService.prototype.transactionOutputHandler = function(output, tx) {
   var self = this;
 
   if (!output.script) {
@@ -323,22 +337,59 @@ BitPayDemoService.prototype.transactionOutputHandler = function(output, inputs) 
   var addr = address.toString();
   //this.log.info('BitPayDemoService => transactionInputHandler => address:', addr);
   if (addr && this.listeningAddresses.hasOwnProperty(addr)) {
-    self.log.info('=========> BitPayDemoService => transactionInputHandler => found transaction for address:', addr);
+    self.log.info('BitPayDemoService => transactionInputHandler => found transaction for address:', addr);
+    self.log.info('BitPayDemoService => transactionInputHandler => transaction:', tx);
+    self.log.info('BitPayDemoService => transactionInputHandler => transaction:', tx.toJSON());
+    self.log.info('BitPayDemoService => transactionInputHandler => output.satoshis:', output.satoshis);
+    
+    //Get the amount paid of this outputs. It may or may not same as what requested.
+    var paid = bitcore.Unit.fromSatoshis(output.satoshis).bits;
+    var tranId = self.listeningAddresses[addr].transactionId;
 
-    models.Transaction.update({
-      _id : self.listeningAddresses[addr].transactionId
-    }, {'$set': {
-      open : false,
-      closedOn : new Date()
-    }}, function(err) {
-      //Need to figure out what if at this point, we got an error to update our DB.
-      //Retry? transaction happened, so we don't want to listen it anymore.
-      delete self.listeningAddresses[addr];
-
+    models.Transaction.findOne({_id : tranId}, function(err, tran) {
       if(err){
-        self.log.info('=========> BitPayDemoService => transactionInputHandler => err update DB for to address:', addr);
+        self.log.info('BitPayDemoService => transactionInputHandler => err occurred when look up transaction %s, err: %s', tranId, err);
+        return;
       }
-    });    
+
+      if(!tran){
+        self.log.info('BitPayDemoService => transactionInputHandler => can\'t find transaction %s', tranId);
+        return;
+      }
+
+      if(!tran.open){
+        self.log.info('BitPayDemoService => transactionInputHandler => transaction has been closed.', tranId);
+        return;
+      }
+
+      //Once amount previously paid plus this time paid is greater equal than what was needed be to paid, we can close this store transaction.
+      var amountBits = bitcore.Unit.fromBTC(tran.amount).bits;
+      var amountPaidBits = bitcore.Unit.fromBTC(tran.amountPaid).bits;
+
+      amountPaidBits = amountPaidBits + paid;
+
+      self.log.info('BitPayDemoService => transactionInputHandler => amountPaidBits %s and amountBits %s.', amountPaidBits, amountBits);
+      var shouldCloseTheTransaction = (amountPaidBits >= amountBits);
+      if(shouldCloseTheTransaction){
+        self.log.info('BitPayDemoService => transactionInputHandler => amount needed is paid, closing the store transaction.');
+        tran.open = false;
+        tran.closedOn = new Date();
+      }
+
+      tran.amountPaid = bitcore.Unit.fromBits(amountPaidBits).BTC;
+
+      tran.save(function(err) {
+        //Need to figure out what if at this point, we got an error to update our DB.
+        //Retry? transaction happened, so we don't want to listen it anymore.
+        if(shouldCloseTheTransaction){
+          delete self.listeningAddresses[addr];
+        }
+
+        if(err){
+          self.log.info('BitPayDemoService => transactionInputHandler => err when save store transaction %s, err: %s', tranId, err);
+        }
+      });
+    });
   }
 };
 

@@ -22,7 +22,7 @@
             'bitpayDemoConfig',
         function($resource, bitpayDemoConfig){
             var apiConfig = bitpayDemoConfig.API;
-            return $resource([apiConfig.URL, "/transactions"].join('')); //endpoint);
+            return $resource([apiConfig.URL, "/transactions/:id"].join('')); //endpoint);
         }
     ]);
 })();
